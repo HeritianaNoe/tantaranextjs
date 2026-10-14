@@ -30,6 +30,23 @@ Tranonkala famakiana tantara an-tsoratra misy fikarohana sy pejy admin ahafahana
    ```
 6. Sokafy `http://localhost:3000`. Pejy admin: `http://localhost:3000/admin`.
 
+
+## Fametrahana amin'ny Vercel (PostgreSQL)
+
+1. Alefaso any amin'ny GitHub ny code (tsy ao anatiny ny `.env`).
+2. Vercel > **Add New > Project** > Import ny repo.
+3. Vercel > ilay project > **Storage** > **Create / Connect Database** (Neon na Supabase) > **Connect Project**.
+   Mifidiana ny environments **Production + Preview + Development**.
+   Mameno ho azy ny `DATABASE_URL`, `POSTGRES_URL`, ... ny Vercel (ny code dia mahita azy na inona na inona prefix).
+4. Vercel > Settings > **Environment Variables** > ampio:
+   - `JWT_SECRET` = string lava random (`openssl rand -base64 32`)
+   - `ADMIN_PASSWORD` (tsy voatery)
+5. **Deployments > Redeploy** (tsy maintsy atao redeploy aorian'ny fanampiana variable).
+
+Ny `npm run build` dia manao ho azy: `db-push` (mamorona ny table) > `prisma generate` > `next build`.
+Raha tsy hita ny database, mijanona ny build ary milaza mazava ao amin'ny Build Logs.
+Hamorona user `admin` / `zakaranda` ho azy ny login voalohany (soloy avy hatrany ao amin'ny dashboard).
+
 ## User par défaut
 
 - **name:** `admin`

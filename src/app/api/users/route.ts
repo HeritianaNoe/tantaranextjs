@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated, hashPassword } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 function noUserModel() {
   return NextResponse.json(
     {

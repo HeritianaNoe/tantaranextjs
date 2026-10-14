@@ -1,7 +1,8 @@
-# Environment variables
+# Environment variables (aza apetraka amin'ny GitHub)
+.env
 .env*.local
 
-# Common ignores
 node_modules
 .next/
+.vercel
 .DS_Store

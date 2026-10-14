@@ -6,7 +6,18 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback-secret");
+function getSecret() {
+  const s = process.env.JWT_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("JWT_SECRET tsy voapetraka ao amin'ny Environment Variables.");
+    }
+    return new TextEncoder().encode("dev-only-secret");
+  }
+  return new TextEncoder().encode(s);
+}
+
+export class DatabaseError extends Error {}
 
 const DEFAULT_NAME = "admin";
 const DEFAULT_PASSWORD = "zakaranda";
@@ -15,12 +26,12 @@ export async function createToken(userId?: string, name?: string) {
   return new SignJWT({ role: "admin", userId, name })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("8h")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload;
   } catch {
     return null;
@@ -53,7 +64,6 @@ export async function verifyPassword(password: string, stored: string): Promise<
 
 /** Ensure default admin user exists when table is empty. */
 async function ensureDefaultUser() {
-  if (!prisma.user) return null;
   const count = await prisma.user.count();
   if (count > 0) return null;
   const hashed = await hashPassword(DEFAULT_PASSWORD);
@@ -67,24 +77,18 @@ async function ensureDefaultUser() {
 /**
  * Authenticate by name + password against DB users.
  * If no users exist, creates default admin/zakaranda then authenticates.
- * Also accepts ADMIN_PASSWORD from env as bootstrap.
+ * ADMIN_PASSWORD (env) dia bootstrap/secours. Raha tsy mandeha ny DB dia
+ * mamoaka DatabaseError (tsy miditra mangina amin'ny teny miafina publika).
  */
 export async function authenticateUser(password: string, name?: string) {
-  try {
-    if (!prisma.user) {
-      if (
-        password === process.env.ADMIN_PASSWORD ||
-        password === DEFAULT_PASSWORD
-      ) {
-        return { id: "bootstrap", name: name?.trim() || DEFAULT_NAME };
-      }
-      return null;
-    }
+  const adminEnv = process.env.ADMIN_PASSWORD;
+  const envMatch = !!adminEnv && password === adminEnv;
+  const displayName = name?.trim() || DEFAULT_NAME;
 
+  try {
     await ensureDefaultUser();
 
-    const loginName = (name?.trim() || DEFAULT_NAME).toLowerCase();
-
+    const loginName = displayName.toLowerCase();
     const user = await prisma.user.findFirst({
       where: { name: { equals: loginName, mode: "insensitive" } },
     });
@@ -93,20 +97,13 @@ export async function authenticateUser(password: string, name?: string) {
       return { id: user.id, name: user.name };
     }
 
-    // Bootstrap env password (any name)
-    if (password === process.env.ADMIN_PASSWORD) {
-      return { id: "bootstrap", name: name?.trim() || DEFAULT_NAME };
-    }
-
+    if (envMatch) return { id: "bootstrap", name: displayName };
     return null;
   } catch (err) {
     console.error("[auth] DB error:", err);
-    if (
-      password === process.env.ADMIN_PASSWORD ||
-      password === DEFAULT_PASSWORD
-    ) {
-      return { id: "bootstrap", name: name?.trim() || DEFAULT_NAME };
-    }
-    return null;
+    if (envMatch) return { id: "bootstrap", name: displayName };
+    throw new DatabaseError(
+      "Tsy afaka mifandray amin'ny database. Jereo ny DATABASE_URL sy ny table (prisma db push)."
+    );
   }
 }
