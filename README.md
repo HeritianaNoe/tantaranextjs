@@ -30,7 +30,29 @@ Tranonkala famakiana tantara an-tsoratra misy fikarohana sy pejy admin ahafahana
    ```
 6. Sokafy `http://localhost:3000`. Pejy admin: `http://localhost:3000/admin`.
 
+## User par défaut
+
+- **name:** `admin`
+- **password:** `zakaranda`
+
+Mamorona azy ho azy raha tsy mbola misy user ao anaty DB (amin'ny login voalohany), na:
+
+```bash
+npx prisma db push
+npm run db:seed
+```
+
+## Users (mot de passe ao anaty base de données)
+
+- Model `User`: **id** / **name** / **password** (hashé (scrypt))
+- CRUD feno ao amin'ny dashboard admin (`/admin/dashboard`)
+- API:
+  - `GET/POST /api/users`
+  - `GET/PUT/DELETE /api/users/[id]`
+- Raha tsy mbola misy user ao anaty DB → mbola azo ampiasaina ny `ADMIN_PASSWORD` ao amin'ny `.env` (bootstrap).
+- Rehefa misy user efa voaforona → ny login dia mijery ny password hash ao anaty table `User` ihany.
+
 ## Fanamarihana
 - Mila mandeha sy azo idirana ny PostgreSQL alohan'ny hampandehanana ny app.
-- Ny bokotra hanovana sy hamafana tantara dia ao amin'ny dashboard admin, aseho amin'ny icon misy `title` sy `aria-label`.
+- Ny bokotra hanovana sy hamafana tantara dia ao amin'ny dashboard admin.
 - Raha misy olana amin'ny database, zahao aloha ny `DATABASE_URL` sy ny log ao amin'ny terminal.

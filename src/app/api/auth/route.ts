@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createToken } from "@/lib/auth";
+import { createToken, authenticateUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json();
+  const { name, password } = await req.json();
 
-  if (password === process.env.ADMIN_PASSWORD) {
-    const token = await createToken();
-    const res = NextResponse.json({ success: true });
-    res.cookies.set("admin_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 8,
-    });
-    return res;
+  if (!password) {
+    return NextResponse.json({ error: "Mot de passe ilaina" }, { status: 400 });
   }
 
-  return NextResponse.json({ error: "Mot de passe diso" }, { status: 401 });
+  const user = await authenticateUser(password, name);
+  if (!user) {
+    return NextResponse.json({ error: "Anarana na mot de passe diso" }, { status: 401 });
+  }
+
+  const token = await createToken(user.id, user.name);
+  const res = NextResponse.json({ success: true, name: user.name });
+  res.cookies.set("admin_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 8,
+  });
+  return res;
 }
 
 export async function DELETE() {

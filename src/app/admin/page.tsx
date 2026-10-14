@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AdminLogin() {
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,13 +18,14 @@ export default function AdminLogin() {
     const res = await fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ name, password }),
     });
 
     if (res.ok) {
       router.push("/admin/dashboard");
     } else {
-      setError("Mot de passe diso");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Anarana na mot de passe diso");
     }
     setLoading(false);
   };
@@ -39,12 +41,22 @@ export default function AdminLogin() {
           <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
         )}
         <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Anarana (name)"
+          className="w-full px-4 py-3 border rounded-lg mb-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+          required
+          autoComplete="username"
+        />
+        <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Mot de passe"
           className="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
           required
+          autoComplete="current-password"
         />
         <button
           type="submit"

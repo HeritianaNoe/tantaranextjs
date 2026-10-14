@@ -37,15 +37,15 @@ export default function HomePage() {
         <div className="absolute -right-20 -top-32 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
         <div className="relative mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Pejy fandraisana">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/20"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z"/><path d="M4 6v15M8 7h8M8 11h8M8 15h5"/></svg></span>
-            <span><span className="block text-lg font-bold tracking-tight sm:text-xl">Tantara An-tsoratra</span><span className="hidden text-xs text-indigo-100 sm:block">Tantara hovakiana sy hizarana</span></span>
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white/10 ring-1 ring-white/20"><svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z"/><path d="M4 6v15M8 7h8M8 11h8M8 15h5"/></svg></span>
+            <span><span className="block text-lg font-bold tracking-tight sm:text-xl">Tantara an-tsoratra</span><span className="hidden text-xs text-indigo-100 sm:block">Tantara hovakiana sy hozaraina</span></span>
           </Link>
           <Link href="/admin" className="rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold backdrop-blur hover:bg-white/20">Admin <span aria-hidden="true">↗</span></Link>
         </div>
         <div className="relative mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-8 sm:pb-16 sm:pt-12">
           <p className="mb-3 text-xs font-bold uppercase tracking-[.22em] text-indigo-200">Tongasoa eto amin'ny tranomboky</p>
-          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Tantara tsara, <span className="text-violet-200">famakiana mahafinaritra.</span></h1>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-indigo-100 sm:text-base">Mitadiava tantara mahaliana, vakio moramora, ary ankafizo ny tontolon'ny soratra.</p>
+          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Tantara tsara, <span className="text-violet-200">mpamaky mahafinaritra.</span></h1>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-indigo-100 sm:text-base">Vakio, ary ankafizo ny tontolon'ny soratra.</p>
         </div>
       </header>
 
