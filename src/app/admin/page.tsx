@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function AdminLogin() {
   const [name, setName] = useState("");
@@ -31,12 +32,15 @@ export default function AdminLogin() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-100">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gray-100 px-4">
+      <h1 className="text-3xl font-extrabold tracking-tight text-indigo-900 sm:text-4xl">
+        Tantara an-tsoratra
+      </h1>
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm"
       >
-        <h1 className="text-2xl font-bold text-center mb-6">Admin Login</h1>
+        <h2 className="text-2xl font-bold text-center mb-6">Admin Login</h2>
         {error && (
           <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
         )}
@@ -65,6 +69,12 @@ export default function AdminLogin() {
         >
           {loading ? "Miandry..." : "Hiditra"}
         </button>
+        <Link
+          href="/"
+          className="mt-3 block w-full py-3 text-center bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200"
+        >
+          ← Hiverina any amin&apos;ny home
+        </Link>
       </form>
     </main>
   );
