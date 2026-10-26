@@ -10,7 +10,6 @@ interface Story { id: string; title: string; content: string; image: string | nu
 export default function HomePage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -18,7 +17,7 @@ export default function HomePage() {
     const fetchStories = async () => {
       setLoading(true); setError("");
       try {
-        const res = await fetch(`/api/stories?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+        const res = await fetch("/api/stories", { signal: controller.signal });
         if (!res.ok) throw new Error("Tsy afaka naka ny lisitry ny tantara.");
         const data: unknown = await res.json();
         if (!Array.isArray(data)) throw new Error("Valiny tsy araka ny tokony ho izy avy amin'ny serveur.");
@@ -29,7 +28,7 @@ export default function HomePage() {
     };
     fetchStories();
     return () => controller.abort();
-  }, [query]);
+  }, []);
 
   return (
     <main className="min-h-screen">
@@ -51,10 +50,10 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-indigo-600">Ny fanangonana</p><h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Lisitry ny tantara</h2></div><span className="rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-500 shadow-sm ring-1 ring-slate-200">{stories.length} tantara</span></div>
-        <SearchBar onSearch={setQuery} />
+        <SearchBar />
         {loading ? <div className="grid gap-6 pt-8 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map((n) => <div key={n} className="h-72 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"><div className="h-40 rounded-t-2xl bg-slate-200"/><div className="space-y-3 p-5"><div className="h-4 w-3/4 rounded bg-slate-200"/><div className="h-3 rounded bg-slate-100"/><div className="h-3 w-2/3 rounded bg-slate-100"/></div></div>)}</div>
         : error ? <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">{error} <button onClick={() => window.location.reload()} className="ml-2 font-bold underline">Andramo indray</button></div>
-        : stories.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-2xl">⌕</div><h3 className="font-bold text-slate-800">Tsy nahitana tantara</h3><p className="mt-1 text-sm text-slate-500">Andramo teny hafa, na jereo indray rehefa misy tantara vaovao.</p></div>
+        : stories.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-2xl">⌕</div><h3 className="font-bold text-slate-800">Mbola tsy misy tantara</h3><p className="mt-1 text-sm text-slate-500">Jereo indray rehefa misy tantara vaovao.</p></div>
         : <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{stories.map((story) => <StoryCard key={story.id} story={story} />)}</div>}
       </section>
       <footer className="border-t border-slate-200 bg-white/70 py-6 text-center text-xs text-slate-500">© 2026 RASOLOMANANA Heritiana Noe.</footer>
