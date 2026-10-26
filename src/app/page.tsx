@@ -44,7 +44,7 @@ export default function HomePage() {
         </div>
         <div className="relative mx-auto max-w-6xl px-5 pb-12 pt-8 sm:px-8 sm:pb-16 sm:pt-12">
           <p className="mb-3 text-xs font-bold uppercase tracking-[.22em] text-indigo-200">Tongasoa eto amin'ny tranomboky</p>
-          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Tantara tsara, <span className="text-violet-200">mpamaky mahafinaritra.</span></h1>
+          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Tantara tsara ho fantatra, <span className="text-violet-200">ny mpamaky mahafinaritra.</span></h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-indigo-100 sm:text-base">Vakio, ary ankafizo ny tontolon'ny soratra.</p>
         </div>
       </header>
@@ -57,7 +57,7 @@ export default function HomePage() {
         : stories.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-2xl">⌕</div><h3 className="font-bold text-slate-800">Tsy nahitana tantara</h3><p className="mt-1 text-sm text-slate-500">Andramo teny hafa, na jereo indray rehefa misy tantara vaovao.</p></div>
         : <div className="mt-7 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{stories.map((story) => <StoryCard key={story.id} story={story} />)}</div>}
       </section>
-      <footer className="border-t border-slate-200 bg-white/70 py-6 text-center text-xs text-slate-500">© {new Date().getFullYear()} Tantara An-tsoratra · Famakiana mahafinaritra</footer>
+      <footer className="border-t border-slate-200 bg-white/70 py-6 text-center text-xs text-slate-500">© 2026 RASOLOMANANA Heritiana Noe.</footer>
     </main>
   );
 }
