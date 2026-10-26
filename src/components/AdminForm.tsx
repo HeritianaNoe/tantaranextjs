@@ -41,7 +41,7 @@ export default function AdminForm({
       // Eto isika dia mampiasa ny put() fiasan'ny Vercel Blob client-side
       const blob = await put(file.name, file, {
         access: "public",
-        handleUploadUrl: "/api/upload", // API route izay noforoninao (na azonao atao mivantana)
+        //handleUploadUrl: "/api/upload", // API route izay noforoninao (na azonao atao mivantana)
       });
 
       setImage(blob.url); // Apetraka ao anaty state ilay URL azo
