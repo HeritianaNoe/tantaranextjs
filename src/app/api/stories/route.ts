@@ -13,21 +13,37 @@ function dbError(err: unknown) {
 }
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams.get("q") || "";
+  const params = req.nextUrl.searchParams;
+  const q = params.get("q") || "";
+  const paginated = params.has("page") || params.has("limit");
+
+  const where = q
+    ? {
+        OR: [
+          { title: { contains: q, mode: "insensitive" as const } },
+          { content: { contains: q, mode: "insensitive" as const } },
+        ],
+      }
+    : undefined;
 
   try {
-    const stories = await prisma.story.findMany({
-      where: q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { content: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : undefined,
+    if (!paginated) {
+      const stories = await prisma.story.findMany({ where, orderBy: { createdAt: "desc" } });
+      return NextResponse.json(stories);
+    }
+
+    const limit = Math.min(50, Math.max(1, parseInt(params.get("limit") || "10", 10) || 10));
+    const total = await prisma.story.count({ where });
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const page = Math.min(totalPages, Math.max(1, parseInt(params.get("page") || "1", 10) || 1));
+
+    const items = await prisma.story.findMany({
+      where,
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
-    return NextResponse.json(stories);
+    return NextResponse.json({ items, total, page, totalPages, limit });
   } catch (err) {
     return dbError(err);
   }

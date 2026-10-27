@@ -1,37 +1,53 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import SearchBar from "@/components/SearchBar";
+import Pagination from "@/components/Pagination";
+
+const PAGE_SIZE = 10;
 
 export const dynamic = "force-dynamic";
 
 interface StoryRow { id: string; title: string; content: string; }
 
-async function findStories(q: string): Promise<StoryRow[]> {
-  return prisma.story.findMany({
-    where: {
-      OR: [
-        { title: { contains: q, mode: "insensitive" } },
-        { content: { contains: q, mode: "insensitive" } },
-      ],
-    },
+async function findStories(q: string, page: number) {
+  const where = {
+    OR: [
+      { title: { contains: q, mode: "insensitive" as const } },
+      { content: { contains: q, mode: "insensitive" as const } },
+    ],
+  };
+  const total = await prisma.story.count({ where });
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const stories: StoryRow[] = await prisma.story.findMany({
+    where,
     select: { id: true, title: true, content: true },
     orderBy: { createdAt: "desc" },
+    skip: (current - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   });
+  return { stories, total, totalPages, page: current };
 }
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string | string[] };
+  searchParams: { q?: string | string[]; page?: string | string[] };
 }) {
   const raw = searchParams.q;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim() ?? "";
 
+  const rawPage = Array.isArray(searchParams.page) ? searchParams.page[0] : searchParams.page;
+  const requestedPage = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
+
   let stories: StoryRow[] = [];
+  let total = 0;
+  let totalPages = 1;
+  let page = 1;
   let failed = false;
   if (q) {
     try {
-      stories = await findStories(q);
+      ({ stories, total, totalPages, page } = await findStories(q, requestedPage));
     } catch (err) {
       console.error("[search]", err);
       failed = true;
@@ -56,7 +72,7 @@ export default async function SearchPage({
           <h2 className="text-xl font-bold text-slate-900">
             {q ? `Valiny ho an'ny “${q}”` : "Valin'ny fikarohana"}
           </h2>
-          {q && !failed && <p className="mt-1 text-sm text-slate-500">{stories.length} tantara</p>}
+          {q && !failed && <p className="mt-1 text-sm text-slate-500">{total} tantara</p>}
         </div>
 
         {failed ? (
@@ -91,6 +107,7 @@ export default async function SearchPage({
             ))}
           </div>
         )}
+        {q && !failed && <Pagination page={page} totalPages={totalPages} hrefBase={`/search?q=${encodeURIComponent(q)}`} />}
       </div>
     </main>
   );
