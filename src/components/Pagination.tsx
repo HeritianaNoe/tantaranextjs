@@ -12,7 +12,7 @@ interface PaginationProps {
 function getPages(page: number, total: number): (number | "…")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const set = new Set([1, total, page - 1, page, page + 1]);
-  const nums = [...set].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const nums = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
   const out: (number | "…")[] = [];
   nums.forEach((n, i) => {
     if (i > 0 && n - nums[i - 1] > 1) out.push("…");
