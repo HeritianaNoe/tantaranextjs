@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -10,6 +10,23 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const resetForm = () => {
+    setName("");
+    setPassword("");
+    setError("");
+  };
+
+  // Fafana foana ny form rehefa tonga eto (ohatra aorian'ny fivoahana), anisan'izany
+  // ny pejy averin'ny browser avy amin'ny cache (bouton "Back" / bfcache).
+  useEffect(() => {
+    resetForm();
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) resetForm();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +40,7 @@ export default function AdminLogin() {
     });
 
     if (res.ok) {
+      resetForm(); // fafana ny anarana sy ny teny miafina alohan'ny hialana amin'ny pejy
       router.push("/admin/dashboard");
     } else {
       const data = await res.json().catch(() => ({}));
@@ -51,7 +69,7 @@ export default function AdminLogin() {
           placeholder="Anarana (name)"
           className="w-full px-4 py-3 border rounded-lg mb-3 focus:ring-2 focus:ring-indigo-500 outline-none"
           required
-          autoComplete="username"
+          autoComplete="off"
         />
         <input
           type="password"
@@ -60,7 +78,7 @@ export default function AdminLogin() {
           placeholder="Mot de passe"
           className="w-full px-4 py-3 border rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none"
           required
-          autoComplete="current-password"
+          autoComplete="new-password"
         />
         <button
           type="submit"
