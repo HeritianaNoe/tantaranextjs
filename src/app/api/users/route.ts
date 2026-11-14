@@ -52,14 +52,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const existing = await prisma.user.findFirst({ where: { name } });
+    const existing = await prisma.user.findFirst({
+      where: { name: { equals: name.trim(), mode: "insensitive" } },
+    });
     if (existing) {
       return NextResponse.json({ error: "Ity anarana ity efa misy" }, { status: 409 });
     }
 
     const hashed = await hashPassword(password);
     const user = await prisma.user.create({
-      data: { name, password: hashed },
+      data: { name: name.trim(), password: hashed },
       select: { id: true, name: true, createdAt: true },
     });
 

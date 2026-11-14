@@ -7,7 +7,7 @@ const PAGE_SIZE = 10;
 
 export const dynamic = "force-dynamic";
 
-interface StoryRow { id: string; title: string; content: string; }
+interface StoryRow { id: string; title: string; content: string; category: { name: string } | null; }
 
 async function findStories(q: string, page: number) {
   const where = {
@@ -21,7 +21,7 @@ async function findStories(q: string, page: number) {
   const current = Math.min(page, totalPages);
   const stories: StoryRow[] = await prisma.story.findMany({
     where,
-    select: { id: true, title: true, content: true },
+    select: { id: true, title: true, content: true, category: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     skip: (current - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
@@ -99,6 +99,9 @@ export default async function SearchPage({
                 className="group flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-200 hover:shadow-md sm:p-5"
               >
                 <div className="min-w-0 flex-1">
+                  {story.category && (
+                    <span className="mb-1.5 inline-block rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">{story.category.name}</span>
+                  )}
                   <h3 className="break-words text-base font-bold text-slate-800 group-hover:text-indigo-700">{story.title}</h3>
                   <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-slate-500">{story.content}</p>
                 </div>

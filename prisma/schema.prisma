@@ -7,13 +7,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  stories     Story[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Story {
+  id         String    @id @default(cuid())
+  title      String
+  content    String
+  image      String?
+  // Optional: ny tantara efa misy dia tsy very rehefa mandeha ny `prisma db push`.
+  // Raha foana ny sokajy, "SetNull" no atao rehefa voafafa ilay sokajy.
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments   Comment[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model Comment {
   id        String   @id @default(cuid())
-  title     String
+  author    String
   content   String
-  image     String?
+  storyId   String
+  // Cascade: rehefa voafafa ny tantara dia mifafa miaraka aminy ny hevitra rehetra.
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([storyId, createdAt])
 }
 
 model User {

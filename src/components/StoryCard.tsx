@@ -5,6 +5,8 @@ interface Story {
   title: string;
   content: string;
   image: string | null;
+  category?: { name: string; slug: string } | null;
+  _count?: { comments: number };
 }
 
 export default function StoryCard({ story }: { story: Story }) {
@@ -20,9 +22,15 @@ export default function StoryCard({ story }: { story: Story }) {
           </div>
         )}
         <div className="flex flex-1 flex-col p-5">
+          {story.category && (
+            <span className="mb-2 w-fit rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">{story.category.name}</span>
+          )}
           <h2 className="mb-2 line-clamp-2 text-lg font-bold leading-snug text-slate-800 group-hover:text-indigo-700">{story.title}</h2>
           <p className="line-clamp-3 text-sm leading-6 text-slate-500">{story.content}</p>
-          <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600">Vakio ny tantara <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span></span>
+          <div className="mt-5 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600">Vakio ny tantara <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span></span>
+            {story._count && <span className="text-xs text-slate-400">{story._count.comments} hevitra</span>}
+          </div>
         </div>
       </Link>
     </article>

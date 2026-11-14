@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import CommentSection from "@/components/CommentSection";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,19 @@ export default async function StoryPage({
 }) {
   const story = await prisma.story.findUnique({
     where: { id: params.id },
+    include: {
+      category: { select: { name: true, slug: true } },
+      comments: {
+        orderBy: { createdAt: "desc" },
+        take: 200,
+        select: { id: true, author: true, content: true, createdAt: true },
+      },
+    },
   });
 
   if (!story) notFound();
+
+  const comments = story.comments.map((c) => ({ ...c, createdAt: c.createdAt.toISOString() }));
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -34,6 +45,14 @@ export default async function StoryPage({
             />
           )}
           <div className="p-8">
+            {story.category && (
+              <Link
+                href={`/categories/${story.category.slug}`}
+                className="mb-3 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100 hover:bg-indigo-100"
+              >
+                {story.category.name}
+              </Link>
+            )}
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {story.title}
             </h1>
@@ -42,6 +61,8 @@ export default async function StoryPage({
             </div>
           </div>
         </article>
+
+        <CommentSection storyId={story.id} initialComments={comments} />
       </div>
     </main>
   );

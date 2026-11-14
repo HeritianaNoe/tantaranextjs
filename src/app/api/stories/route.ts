@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
+import { isForeignKeyViolation } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -12,23 +14,37 @@ function dbError(err: unknown) {
   );
 }
 
+const storyInclude = {
+  category: { select: { id: true, name: true, slug: true } },
+  _count: { select: { comments: true } },
+} satisfies Prisma.StoryInclude;
+
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const q = params.get("q") || "";
+  const category = params.get("category") || ""; // slug
   const paginated = params.has("page") || params.has("limit");
 
-  const where = q
-    ? {
-        OR: [
-          { title: { contains: q, mode: "insensitive" as const } },
-          { content: { contains: q, mode: "insensitive" as const } },
-        ],
-      }
-    : undefined;
+  const and: Prisma.StoryWhereInput[] = [];
+  if (q) {
+    and.push({
+      OR: [
+        { title: { contains: q, mode: "insensitive" } },
+        { content: { contains: q, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (category === "none") and.push({ categoryId: null });
+  else if (category) and.push({ category: { slug: category } });
+  const where: Prisma.StoryWhereInput | undefined = and.length ? { AND: and } : undefined;
 
   try {
     if (!paginated) {
-      const stories = await prisma.story.findMany({ where, orderBy: { createdAt: "desc" } });
+      const stories = await prisma.story.findMany({
+        where,
+        include: storyInclude,
+        orderBy: { createdAt: "desc" },
+      });
       return NextResponse.json(stories);
     }
 
@@ -39,6 +55,7 @@ export async function GET(req: NextRequest) {
 
     const items = await prisma.story.findMany({
       where,
+      include: storyInclude,
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
@@ -54,7 +71,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Tsy azo atao" }, { status: 401 });
   }
 
-  const { title, content, image } = await req.json().catch(() => ({}));
+  const { title, content, image, categoryId } = await req.json().catch(() => ({}));
 
   if (!title || !content) {
     return NextResponse.json({ error: "Title sy content ilaina" }, { status: 400 });
@@ -62,10 +79,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const story = await prisma.story.create({
-      data: { title, content, image: image || null },
+      data: {
+        title,
+        content,
+        image: image || null,
+        categoryId: categoryId || null,
+      },
+      include: storyInclude,
     });
     return NextResponse.json(story, { status: 201 });
   } catch (err) {
+    if (isForeignKeyViolation(err)) {
+      return NextResponse.json({ error: "Tsy hita ny sokajy nofidina" }, { status: 400 });
+    }
     return dbError(err);
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { upload } from "@vercel/blob/client";
 
 interface Story {
@@ -8,6 +8,12 @@ interface Story {
   title: string;
   content: string;
   image: string | null;
+  categoryId: string | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 export default function AdminForm({
@@ -22,10 +28,19 @@ export default function AdminForm({
   const [title, setTitle] = useState(story?.title || "");
   const [content, setContent] = useState(story?.content || "");
   const [image, setImage] = useState(story?.image || "");
+  const [categoryId, setCategoryId] = useState(story?.categoryId || "");
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => Array.isArray(d) && setCategories(d))
+      .catch(() => {});
+  }, []);
 
   // Upload sary mivantana any amin'ny Vercel Blob (client → Blob)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +84,7 @@ export default function AdminForm({
         title: title.trim(),
         content: content.trim(),
         image: image.trim() || null,
+        categoryId: categoryId || null,
       };
       const url = story ? `/api/stories/${story.id}` : "/api/stories";
       const method = story ? "PUT" : "POST";
@@ -122,6 +138,20 @@ export default function AdminForm({
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal outline-none focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100"
           required
         />
+      </label>
+
+      <label className="block space-y-2 text-sm font-semibold text-slate-700">
+        Sokajy
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-normal outline-none focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+        >
+          <option value="">— Tsy misy sokajy —</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
       </label>
 
       <label className="block space-y-2 text-sm font-semibold text-slate-700">

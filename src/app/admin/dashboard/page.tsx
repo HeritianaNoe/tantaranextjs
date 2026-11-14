@@ -1,27 +1,66 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import UsersManager from "@/components/UsersManager";
-import Pagination from "@/components/Pagination";
+import { redirect } from "next/navigation";
+import { isAuthenticated } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import AdminHeader from "@/components/AdminHeader";
 
-const PAGE_SIZE = 10;
-interface Story { id: string; title: string; content: string; image: string | null; }
-function ActionIcon({ type }: { type: "edit" | "delete" }) { return type === "edit" ? <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg> : <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg>; }
-export default function AdminDashboard() {
-  const [stories, setStories] = useState<Story[]>([]); const [page, setPage] = useState(1); const [totalPages, setTotalPages] = useState(1); const [total, setTotal] = useState(0); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [deleting, setDeleting] = useState<string | null>(null); const router = useRouter();
-  const loadStories = async (p: number = page) => { setLoading(true); setError(""); try { const res = await fetch(`/api/stories?page=${p}&limit=${PAGE_SIZE}`); if (res.status === 401) { router.push("/admin"); return; } if (!res.ok) throw new Error("Tsy afaka naka ny lisitry ny tantara."); const data = await res.json(); if (!data || !Array.isArray(data.items)) throw new Error("Valiny tsy mety avy amin'ny serveur."); setStories(data.items); setTotal(data.total); setTotalPages(data.totalPages); setPage(data.page); } catch (e) { setError(e instanceof Error ? e.message : "Nisy olana."); } finally { setLoading(false); } };
-  useEffect(() => { void loadStories(1); }, []);
-  const handleDelete = async (id: string) => { if (!window.confirm("Hamafa tanteraka ity tantara ity ve ianao?")) return; setDeleting(id); setError(""); try { const res = await fetch(`/api/stories/${id}`, { method: "DELETE" }); if (!res.ok) throw new Error("Tsy voafafa ilay tantara. Jereo ny fidirana admin."); await loadStories(page); } catch (e) { setError(e instanceof Error ? e.message : "Nisy olana tamin'ny famafana."); } finally { setDeleting(null); } };
-  const handleLogout = async () => { try { await fetch("/api/auth", { method: "DELETE" }); } finally { router.push("/admin"); router.refresh(); } };
-  return <main className="min-h-screen bg-slate-50">
-    <header className="bg-gradient-to-r from-indigo-950 to-violet-800 text-white shadow-lg"><div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-8"><div><Link href="/" className="text-xs font-medium text-indigo-200 hover:text-white">← Hijery ny tranonkala</Link><h1 className="mt-1 text-2xl font-bold">Fitantanana tantara</h1><p className="mt-1 text-sm text-indigo-100">Ampio, ovao na fafao ny tantara.</p></div><div className="flex gap-2"><button onClick={handleLogout} className="rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold hover:bg-white/20">Hivoaka</button></div></div></header>
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-            <UsersManager />
-      {error && <p role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error} <button onClick={() => void loadStories(page)} className="font-bold underline">Andramo indray</button></p>}
-      <div className="mb-4 flex items-end justify-between"><div><h2 className="text-xl font-bold text-slate-900">Tantara voatahiry</h2><p className="mt-1 text-sm text-slate-500">{total} tantara</p></div><Link href="/admin/stories/new" className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700"><span className="text-lg leading-none">+</span> Tantara vaovao</Link></div>
-      {loading ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Ampidirina ny lisitra…</div> : stories.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center"><p className="font-semibold text-slate-700">Mbola tsy misy tantara.</p><p className="mt-1 text-sm text-slate-500">Tsindrio “Tantara vaovao” hanampiana iray.</p></div> : <div className="space-y-3">{stories.map((story) => <article key={story.id} className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5"><div className="min-w-0 flex-1"><h3 className="break-words text-base font-bold text-slate-800">{story.title}</h3><p className="mt-1 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-slate-500">{story.content}</p></div><div className="flex shrink-0 items-center gap-2 self-end sm:self-center"><Link href={`/admin/stories/${story.id}/edit`} title="Hanova tantara" aria-label={`Hanova: ${story.title}`} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-700 hover:border-indigo-300 hover:bg-indigo-100"><ActionIcon type="edit" /></Link><button type="button" onClick={() => void handleDelete(story.id)} disabled={deleting === story.id} title="Hamafa tantara" aria-label={`Hamafa: ${story.title}`} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100 disabled:cursor-wait disabled:opacity-50"><ActionIcon type="delete" /></button></div></article>)}</div>}
-      {!loading && <Pagination page={page} totalPages={totalPages} onChange={(p) => void loadStories(p)} />}
-    </div>
-  </main>;
+export const dynamic = "force-dynamic";
+
+async function getCounts() {
+  try {
+    const [stories, categories, comments, users] = await Promise.all([
+      prisma.story.count(),
+      prisma.category.count(),
+      prisma.comment.count(),
+      prisma.user.count(),
+    ]);
+    return { stories, categories, comments, users };
+  } catch (err) {
+    console.error("[dashboard]", err);
+    return null;
+  }
+}
+
+export default async function AdminDashboard() {
+  if (!(await isAuthenticated())) redirect("/admin");
+  const counts = await getCounts();
+  const n = (v: number | undefined) => (v === undefined ? "—" : String(v));
+
+  const cards = [
+    { href: "/admin/stories", title: "Tantara voatahiry", desc: "Ampio, ovao na fafao ny tantara.", count: n(counts?.stories), unit: "tantara" },
+    { href: "/admin/categories", title: "Sokajy", desc: "Fitantanana ny sokajin'ny tantara.", count: n(counts?.categories), unit: "sokajy" },
+    { href: "/admin/comments", title: "Hevitra", desc: "Fanaraha-maso ny hevitry ny mpamaky.", count: n(counts?.comments), unit: "hevitra" },
+    { href: "/admin/users", title: "Mpampiasa (Users) — CRUD", desc: "Ireo afaka miditra amin'ny admin.", count: n(counts?.users), unit: "user" },
+  ];
+
+  return (
+    <main className="min-h-screen bg-slate-50">
+      <AdminHeader title="Fitantanana" subtitle="Misafidiara ny ampahany tianao tantanana." />
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
+        {!counts && (
+          <p role="alert" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Tsy azo ny isa avy amin&apos;ny database. Jereo raha vita ny <code>prisma db push</code>.
+          </p>
+        )}
+        <div className="grid gap-5 sm:grid-cols-2">
+          {cards.map((c) => (
+            <Link
+              key={c.href}
+              href={c.href}
+              className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <h2 className="text-lg font-bold text-slate-800 group-hover:text-indigo-700">{c.title}</h2>
+                <span aria-hidden="true" className="text-indigo-600 transition-transform group-hover:translate-x-1">→</span>
+              </div>
+              <p className="mt-1 text-sm text-slate-500">{c.desc}</p>
+              <p className="mt-4 text-3xl font-extrabold text-indigo-900">
+                {c.count} <span className="text-sm font-medium text-slate-400">{c.unit}</span>
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
 }

@@ -1,4 +1,4 @@
-// Mamorona/manavao ny table (Story, User) ao amin'ny PostgreSQL avy amin'ny prisma/schema.prisma.
+// Mamorona/manavao ny table (Category, Story, Comment, User) ao amin'ny PostgreSQL avy amin'ny prisma/schema.prisma.
 // Mandeha ao anaty build an'i Vercel. Mampiasa ny URL "direct" (tsy pooler) satria
 // ny `prisma db push` tsy mandeha amin'ny pgbouncer.
 import { spawnSync } from "node:child_process";
@@ -26,4 +26,15 @@ const r = spawnSync("npx", ["prisma", "db", "push", "--skip-generate"], {
   env: { ...process.env, DATABASE_URL: direct },
   shell: process.platform === "win32",
 });
-process.exit(r.status ?? 1);
+if ((r.status ?? 1) !== 0) process.exit(r.status ?? 1);
+
+// Mampiditra ny angona voalohany (sokajy sy user admin). Tsy mamerina raha efa misy angona,
+// ka azo atao isaky ny deploy. Tsy manapaka ny build raha tsy nety.
+console.log("[db-push] Mampiditra ny angona voalohany (seed)...");
+const seed = spawnSync("npx", ["tsx", "prisma/seed.ts"], {
+  stdio: "inherit",
+  env: { ...process.env, DATABASE_URL: direct },
+  shell: process.platform === "win32",
+});
+if (seed.status !== 0) console.warn("[db-push] Tsy nety ny seed (tsy manapaka ny build).");
+process.exit(0);

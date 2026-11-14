@@ -45,6 +45,16 @@ export async function PUT(
   }
 
   try {
+    if (data.name) {
+      const clash = await prisma.user.findFirst({
+        where: { id: { not: params.id }, name: { equals: data.name, mode: "insensitive" } },
+        select: { id: true },
+      });
+      if (clash) {
+        return NextResponse.json({ error: "Ity anarana ity efa misy" }, { status: 409 });
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id: params.id },
       data,
@@ -52,7 +62,7 @@ export async function PUT(
     });
     return NextResponse.json(user);
   } catch {
-    return NextResponse.json({ error: "Tsy hita na anarana efa misy" }, { status: 404 });
+    return NextResponse.json({ error: "Tsy hita ny user" }, { status: 404 });
   }
 }
 
@@ -65,6 +75,15 @@ export async function DELETE(
   }
 
   try {
+    // Tsy afaka mamafa ny user farany: raha foana ny table dia noforonina indray ny admin/zakaranda (lalana fidirana fantatry ny rehetra).
+    const count = await prisma.user.count();
+    if (count <= 1) {
+      return NextResponse.json(
+        { error: "Tsy azo fafana ny user farany. Mamorona user hafa aloha." },
+        { status: 400 }
+      );
+    }
+
     await prisma.user.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch {

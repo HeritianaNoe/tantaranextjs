@@ -8,7 +8,8 @@ import Pagination from "@/components/Pagination";
 
 const PAGE_SIZE = 9;
 
-interface Story { id: string; title: string; content: string; image: string | null; createdAt: string; }
+interface Story { id: string; title: string; content: string; image: string | null; createdAt: string; category: { name: string; slug: string } | null; _count: { comments: number }; }
+interface Category { id: string; name: string; slug: string; _count: { stories: number }; }
 
 export default function HomePage() {
   const [stories, setStories] = useState<Story[]>([]);
@@ -17,6 +18,14 @@ export default function HomePage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => Array.isArray(d) && setCategories(d))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,6 +69,16 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-indigo-600">Ny fanangonana</p><h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Lisitry ny tantara</h2></div><span className="rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-500 shadow-sm ring-1 ring-slate-200">{total} tantara</span></div>
         <SearchBar />
+        {categories.length > 0 && (
+          <nav aria-label="Sokajy" className="mt-5 flex flex-wrap gap-2">
+            <span className="rounded-full bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold text-white">Rehetra</span>
+            {categories.map((c) => (
+              <Link key={c.id} href={`/categories/${c.slug}`} className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-700">
+                {c.name} <span className="text-xs text-slate-400">{c._count.stories}</span>
+              </Link>
+            ))}
+          </nav>
+        )}
         {loading ? <div className="grid gap-6 pt-8 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map((n) => <div key={n} className="h-72 animate-pulse rounded-2xl bg-white shadow-sm ring-1 ring-slate-200"><div className="h-40 rounded-t-2xl bg-slate-200"/><div className="space-y-3 p-5"><div className="h-4 w-3/4 rounded bg-slate-200"/><div className="h-3 rounded bg-slate-100"/><div className="h-3 w-2/3 rounded bg-slate-100"/></div></div>)}</div>
         : error ? <div role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">{error} <button onClick={() => window.location.reload()} className="ml-2 font-bold underline">Andramo indray</button></div>
         : stories.length === 0 ? <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-2xl">⌕</div><h3 className="font-bold text-slate-800">Mbola tsy misy tantara</h3><p className="mt-1 text-sm text-slate-500">Jereo indray rehefa misy tantara vaovao.</p></div>
